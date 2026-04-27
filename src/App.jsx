@@ -26,23 +26,9 @@ function SearchScreen({ onResults }) {
         body: JSON.stringify({ keyword: trimmed }),
       })
 
-      const rawText = await res.text()
-
-      console.log('--- Webhook Debug ---')
-      console.log('Status:', res.status)
-      console.log('Content-Type:', res.headers.get('content-type'))
-      console.log('Raw body:', rawText)
-      console.log('Body length:', rawText.length)
-
-      onResults({
-        keyword: trimmed,
-        data: rawText,
-        status: res.status,
-        ok: res.ok,
-        contentType: res.headers.get('content-type') || 'none',
-      })
+      const data = await res.text()
+      onResults({ keyword: trimmed, data })
     } catch (err) {
-      console.error('Fetch error:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -106,7 +92,7 @@ function SearchScreen({ onResults }) {
 // ─── Results Screen ──────────────────────────────────────────────────────────
 
 function ResultsScreen({ result, onBack }) {
-  const { keyword, data, status, ok, contentType } = result
+  const { keyword, data } = result
 
   return (
     <div className="screen results-screen">
@@ -130,16 +116,10 @@ function ResultsScreen({ result, onBack }) {
           <span className="results-badge">Webhook response</span>
         </div>
 
-        <div className="debug-panel">
-          <span className="debug-row"><strong>Status:</strong> {status} {ok ? '✅' : '❌'}</span>
-          <span className="debug-row"><strong>Content-Type:</strong> {contentType}</span>
-          <span className="debug-row"><strong>Body length:</strong> {data.length} chars</span>
-        </div>
-
         <div className="results-body">
           {data.length === 0 ? (
             <div className="empty-state">
-              ⚠ The webhook returned an empty response. Check that your n8n workflow is published and the Respond to Webhook node has content configured.
+              ⚠ No results returned. Please try a different keyword.
             </div>
           ) : (
             <div className="raw-text">{data}</div>
